@@ -1,35 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace TorresHanoi
 {
     class Program
     {
-        static Dictionary<char, Stack<int>> towers; // Declara un diccionario de torres
-        static int numDiscos = 5; 
+        static Dictionary<char, Stack<int>> torres;
+        static int numDiscos = 5;
+
         static void Main(string[] args)
         {
-            InitializeTowers(); 
-            ShowTowers(); 
+            InicializarTorres(); // Inicializa las torres con discos en la torre A
+            MostrarTorres(); // Muestra el estado inicial del juego
 
-            while (!IsGameComplete()) // Realiza accion hasta que termine el juego
+            while (!JuegoCompleto())
             {
                 Console.Write("Ingrese movimiento (ejemplo: AC para mover de torre A a torre C): ");
-                string move = Console.ReadLine().ToUpper(); 
+                string movimiento = Console.ReadLine().ToUpper();
 
-                if (move.Length == 2 && towers.ContainsKey(move[0]) && towers.ContainsKey(move[1]))
+                if (movimiento.Length == 2 && torres.ContainsKey(movimiento[0]) && torres.ContainsKey(movimiento[1]))
                 {
-                    char source = move[0]; // Obtiene la torre de origen
-                    char destination = move[1]; // Obtiene la torre de destino
+                    char origen = movimiento[0];
+                    char destino = movimiento[1];
 
-                    if (IsValidMove(source, destination)) // Comprueba si el movimiento es válido
+                    if (MovimientoValido(origen, destino))
                     {
-                        MoveDisk(source, destination); // Realiza el movimiento del disco
-                        ShowTowers(); // Muestra el estado actualizado de las torres
+                        MoverDisco(origen, destino);
+                        MostrarTorres(); // Muestra el estado actualizado del juego después de cada movimiento
                     }
                     else
                     {
@@ -43,79 +41,85 @@ namespace TorresHanoi
             }
 
             Console.WriteLine("¡Has completado el juego!");
-            Console.ReadKey(); 
+            Console.ReadKey();
         }
 
-        static void InitializeTowers()
+        static void InicializarTorres()
         {
-            towers = new Dictionary<char, Stack<int>>(); // Inicializa el diccionario de torres
+            torres = new Dictionary<char, Stack<int>>();
 
-            for (char c = 'A'; c <= 'C'; c++) // Crea las tres torres (A, B, C) como pilas 
+            for (char c = 'A'; c <= 'C'; c++)
             {
-                towers[c] = new Stack<int>();
+                torres[c] = new Stack<int>();
             }
 
-            for (int i = numDiscos; i >= 1; i--) // Coloca los discos en la primera torre, de mayor a menor
+            for (int i = numDiscos; i >= 1; i--)
             {
-                towers['A'].Push(i);
+                torres['A'].Push(i); // Coloca los discos en la torre A de mayor a menor
             }
         }
 
-        static void ShowTowers() //Muestra las torres
+        static void MostrarTorres()
         {
-            Console.Clear(); 
+            Console.Clear();
 
-            Console.WriteLine("-----|-----|-----");
-            for (int i = 1; i <= numDiscos; i++)
+            Console.WriteLine("Torres de Hanoi");
+            Console.WriteLine("---------------");
+
+            for (int i = numDiscos; i >= 1; i--)
             {
-                foreach (var tower in towers)
+                foreach (var torre in torres)
                 {
-                    char towerName = tower.Key; 
-                    Stack<int> disks = tower.Value; 
-                    int disk = disks.Count >= i ? disks.ToArray()[i - 1] : 0; 
-                    string diskDisplay = new string('X', disk); //Representacion del disco (X)
+                    char nombreTorre = torre.Key;
+                    Stack<int> discos = torre.Value;
 
-                    Console.Write($"{towerName}: {diskDisplay.PadLeft(numDiscos)} ");
+                    int disco = discos.Count >= i ? discos.ToArray()[discos.Count - i] : 0;
+                    string representacionDisco = new string('X', disco);
+
+                    // Añadir espacios para centrar los discos
+                    string discoFormateado = representacionDisco.PadLeft(numDiscos + 2).PadRight(numDiscos * 2 + 2);
+
+                    Console.Write($" {nombreTorre} | {discoFormateado} ");
                 }
 
                 Console.WriteLine();
             }
 
-            Console.WriteLine("  A  |  B  |  C  "); // Etiquetas de las torres
+            Console.WriteLine("  A  |  B  |  C  ");
         }
 
-        static bool IsValidMove(char source, char destination)
+        static bool MovimientoValido(char origen, char destino)
         {
-            if (!towers.ContainsKey(source) || !towers.ContainsKey(destination)) // Verifica que las torres sean válidas
+            if (!torres.ContainsKey(origen) || !torres.ContainsKey(destino))
             {
-                return false;
+                return false; // Verifica que las torres sean válidas
             }
 
-            if (towers[source].Count == 0) // Verifica que la torre de origen no esté vacía
+            if (torres[origen].Count == 0)
             {
-                return false;
+                return false; // Verifica que la torre de origen no esté vacía
             }
 
-            if (towers[destination].Count == 0) // Si la torre de destino está vacía, el movimiento es válido
+            if (torres[destino].Count == 0)
             {
-                return true;
+                return true; // Si la torre de destino está vacía, el movimiento es válido
             }
 
-            int sourceTopDisk = towers[source].Peek(); 
-            int destinationTopDisk = towers[destination].Peek(); 
+            int discoOrigenSuperior = torres[origen].Peek();
+            int discoDestinoSuperior = torres[destino].Peek();
 
-            return sourceTopDisk < destinationTopDisk; // Compara los discos para determinar si el movimiento es válido
+            return discoOrigenSuperior < discoDestinoSuperior; // Compara los discos para determinar si el movimiento es válido
         }
 
-        static void MoveDisk(char source, char destination)
+        static void MoverDisco(char origen, char destino)
         {
-            int diskToMove = towers[source].Pop(); 
-            towers[destination].Push(diskToMove); 
+            int discoAMover = torres[origen].Pop();
+            torres[destino].Push(discoAMover);
         }
 
-        static bool IsGameComplete()
+        static bool JuegoCompleto()
         {
-            return towers['C'].Count == numDiscos; // Verifica si todos los discos están en la última torre (C)
+            return torres['C'].Count == numDiscos; // Verifica si todos los discos están en la última torre (C)
         }
     }
 }
